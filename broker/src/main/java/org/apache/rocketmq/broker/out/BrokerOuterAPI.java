@@ -140,6 +140,7 @@ public class BrokerOuterAPI {
             final byte[] body = requestBody.encode(compressed);
             final int bodyCrc32 = UtilAll.crc32(body);
             requestHeader.setBodyCrc32(bodyCrc32);
+            // 并发注册到 NameServer，利用 countDownLatch 来等待所有结果返回
             final CountDownLatch countDownLatch = new CountDownLatch(nameServerAddressList.size());
             for (final String namesrvAddr : nameServerAddressList) {
                 brokerOuterExecutor.execute(() -> {
@@ -286,6 +287,7 @@ public class BrokerOuterAPI {
                                 byte[] body = response.getBody();
                                 if (body != null) {
                                     nameServerDataVersion = DataVersion.decode(body, DataVersion.class);
+                                    // 根据数据版本是否一致来判断是否需要注册
                                     if (!topicConfigWrapper.getDataVersion().equals(nameServerDataVersion)) {
                                         changed = true;
                                     }

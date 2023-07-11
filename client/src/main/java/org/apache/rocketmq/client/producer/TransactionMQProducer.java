@@ -86,6 +86,7 @@ public class TransactionMQProducer extends DefaultMQProducer {
     @Override
     public TransactionSendResult sendMessageInTransaction(final Message msg,
         final Object arg) throws MQClientException {
+        // 必须要有对应的事务监听组件，否则会无法设置本地事务执行的状态，所以这里会抛出异常。
         if (null == this.transactionListener) {
             throw new MQClientException("TransactionListener is null", null);
         }

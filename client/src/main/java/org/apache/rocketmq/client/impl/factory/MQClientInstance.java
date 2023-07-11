@@ -229,6 +229,7 @@ public class MQClientInstance {
                 case CREATE_JUST:
                     this.serviceState = ServiceState.START_FAILED;
                     // If not specified,looking address from name server
+                    // 如果没有指定 NameServer 地址，就获取 nameSrv 地址
                     if (null == this.clientConfig.getNamesrvAddr()) {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
@@ -260,6 +261,7 @@ public class MQClientInstance {
                 @Override
                 public void run() {
                     try {
+                        // 拉取 NameServer 地址
                         MQClientInstance.this.mQClientAPIImpl.fetchNameServerAddr();
                     } catch (Exception e) {
                         log.error("ScheduledTask fetchNameServerAddr exception", e);
@@ -273,6 +275,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 更新 topic 信息
                     MQClientInstance.this.updateTopicRouteInfoFromNameServer();
                 } catch (Exception e) {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
@@ -285,7 +288,9 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 清理离线 Broker
                     MQClientInstance.this.cleanOfflineBroker();
+                    // 向所有 broker 发送心跳
                     MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
                 } catch (Exception e) {
                     log.error("ScheduledTask sendHeartbeatToAllBroker exception", e);
@@ -298,6 +303,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // Consumer Client 会持久化 offset
                     MQClientInstance.this.persistAllConsumerOffset();
                 } catch (Exception e) {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);

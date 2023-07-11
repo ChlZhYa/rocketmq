@@ -25,10 +25,18 @@ import java.util.Map;
 public class Message implements Serializable {
     private static final long serialVersionUID = 8445773977080406428L;
 
+    // topic
     private String topic;
+    // 透传字段，下游可以判断
     private int flag;
+    /**
+     * 属性集合，例如 tags,keys,PROPERTY_WAIT_STORE_MSG_OK.
+     * @see MessageConst
+     */
     private Map<String, String> properties;
+    // 消息体
     private byte[] body;
+    // 事务消息使用
     private String transactionId;
 
     public Message() {
@@ -50,7 +58,7 @@ public class Message implements Serializable {
         if (keys != null && keys.length() > 0) {
             this.setKeys(keys);
         }
-
+        // 设置是否需要等到消息落到磁盘后，才返回应答
         this.setWaitStoreMsgOK(waitStoreMsgOK);
     }
 

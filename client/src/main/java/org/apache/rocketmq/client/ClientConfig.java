@@ -109,6 +109,7 @@ public class ClientConfig {
 
     public void changeInstanceNameToPID() {
         if (this.instanceName.equals("DEFAULT")) {
+            // 设置实例名，由于 nanoTime 存在，几乎不可能重复
             this.instanceName = UtilAll.getPid() + "#" + System.nanoTime();
         }
     }

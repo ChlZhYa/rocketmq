@@ -58,6 +58,7 @@ public class AllocateMappedFileService extends ServiceThread {
         }
 
         AllocateRequest nextReq = new AllocateRequest(nextFilePath, fileSize);
+        // 将文件创建请求放入内存队列中（Nacos 中处理服务注册也是同样的方式）
         boolean nextPutOK = this.requestTable.putIfAbsent(nextFilePath, nextReq) == null;
 
         if (nextPutOK) {
@@ -94,6 +95,7 @@ public class AllocateMappedFileService extends ServiceThread {
             return null;
         }
 
+        // 获取创建文件需求
         AllocateRequest result = this.requestTable.get(nextFilePath);
         try {
             if (result != null) {
@@ -147,6 +149,7 @@ public class AllocateMappedFileService extends ServiceThread {
         boolean isSuccess = false;
         AllocateRequest req = null;
         try {
+            // 从内存队列中拿到创建文件的请求
             req = this.requestQueue.take();
             AllocateRequest expectedRequest = this.requestTable.get(req.getFilePath());
             if (null == expectedRequest) {
@@ -173,6 +176,7 @@ public class AllocateMappedFileService extends ServiceThread {
                         mappedFile = new MappedFile(req.getFilePath(), req.getFileSize(), messageStore.getTransientStorePool());
                     }
                 } else {
+                    // 创建文件
                     mappedFile = new MappedFile(req.getFilePath(), req.getFileSize());
                 }
 

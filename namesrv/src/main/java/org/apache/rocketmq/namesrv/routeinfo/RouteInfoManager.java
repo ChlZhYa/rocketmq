@@ -148,7 +148,7 @@ public class RouteInfoManager {
         try {
             try {
                 this.lock.writeLock().lockInterruptibly();
-
+                // 将 broker 放入到所属 cluster 中
                 Set<String> brokerNames = this.clusterAddrTable.computeIfAbsent(clusterName, k -> new HashSet<>());
                 brokerNames.add(brokerName);
 
@@ -156,6 +156,7 @@ public class RouteInfoManager {
 
                 BrokerData brokerData = this.brokerAddrTable.get(brokerName);
                 if (null == brokerData) {
+                    // 首次注册
                     registerFirst = true;
                     brokerData = new BrokerData(clusterName, brokerName, new HashMap<>());
                     this.brokerAddrTable.put(brokerName, brokerData);
@@ -188,6 +189,7 @@ public class RouteInfoManager {
                                 topicConfigWrapper.getTopicConfigTable();
                         if (tcTable != null) {
                             for (Map.Entry<String, TopicConfig> entry : tcTable.entrySet()) {
+                                // 初始化 MessageQueue 数据
                                 this.createAndUpdateQueueData(brokerName, entry.getValue());
                             }
                         }
@@ -196,7 +198,7 @@ public class RouteInfoManager {
 
                 BrokerLiveInfo prevBrokerLiveInfo = this.brokerLiveTable.put(brokerAddr,
                         new BrokerLiveInfo(
-                                System.currentTimeMillis(),
+                                System.currentTimeMillis(),// 心跳时间
                                 topicConfigWrapper.getDataVersion(),
                                 channel,
                                 haServerAddr));
@@ -253,6 +255,7 @@ public class RouteInfoManager {
     }
 
     private void createAndUpdateQueueData(final String brokerName, final TopicConfig topicConfig) {
+        // 根据 Broker 传过来的数据构建 MessageQueue
         QueueData queueData = new QueueData();
         queueData.setBrokerName(brokerName);
         queueData.setWriteQueueNums(topicConfig.getWriteQueueNums());
@@ -262,6 +265,7 @@ public class RouteInfoManager {
 
         Map<String, QueueData> queueDataMap = this.topicQueueTable.get(topicConfig.getTopicName());
         if (null == queueDataMap) {
+            // 首次注册的 Topic 处理逻辑
             queueDataMap = new HashMap<>();
             queueDataMap.put(queueData.getBrokerName(), queueData);
             this.topicQueueTable.put(topicConfig.getTopicName(), queueDataMap);

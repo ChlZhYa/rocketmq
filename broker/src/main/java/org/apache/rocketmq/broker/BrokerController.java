@@ -241,6 +241,7 @@ public class BrokerController {
     }
 
     public boolean initialize() throws CloneNotSupportedException {
+        // 加载磁盘数据
         boolean result = this.topicConfigManager.load();
 
         result = result && this.consumerOffsetManager.load();
@@ -345,7 +346,7 @@ public class BrokerController {
             this.consumerManageExecutor =
                 Executors.newFixedThreadPool(this.brokerConfig.getConsumerManageThreadPoolNums(), new ThreadFactoryImpl(
                     "ConsumerManageThread_"));
-
+            // 处理器初始化
             this.registerProcessor();
 
             final long initialDelay = UtilAll.computeNextMorningTimeMillis() - System.currentTimeMillis();
@@ -549,6 +550,7 @@ public class BrokerController {
         sendProcessor.registerSendMessageHook(sendMessageHookList);
         sendProcessor.registerConsumeMessageHook(consumeMessageHookList);
 
+        // RequestCode 是请求标识，processor 是请求处理器 ,处理请求时执行并发任务使用的线程池
         this.remotingServer.registerProcessor(RequestCode.SEND_MESSAGE, sendProcessor, this.sendMessageExecutor);
         this.remotingServer.registerProcessor(RequestCode.SEND_MESSAGE_V2, sendProcessor, this.sendMessageExecutor);
         this.remotingServer.registerProcessor(RequestCode.SEND_BATCH_MESSAGE, sendProcessor, this.sendMessageExecutor);
@@ -850,6 +852,7 @@ public class BrokerController {
         return this.brokerConfig.getBrokerIP1() + ":" + this.nettyServerConfig.getListenPort();
     }
 
+    // 启动各种依赖项
     public void start() throws Exception {
         if (this.messageStore != null) {
             this.messageStore.start();
@@ -889,6 +892,7 @@ public class BrokerController {
             this.registerBrokerAll(true, false, true);
         }
 
+        // 初始化心跳任务，心跳检测时间默认为 30秒
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override

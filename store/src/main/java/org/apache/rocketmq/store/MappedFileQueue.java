@@ -210,6 +210,7 @@ public class MappedFileQueue {
         }
 
         if (createOffset != -1 && needCreate) {
+            // 创建 MappedFile
             return tryCreateMappedFile(createOffset);
         }
 
@@ -217,6 +218,7 @@ public class MappedFileQueue {
     }
 
     protected MappedFile tryCreateMappedFile(long createOffset) {
+        // 创建当前需要的 CommitLog 与 下一个 CommitLog，这样当前 CommitLog 写满之后可以快速切换
         String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
         String nextNextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset
                 + this.mappedFileSize);
@@ -227,6 +229,7 @@ public class MappedFileQueue {
         MappedFile mappedFile = null;
 
         if (this.allocateMappedFileService != null) {
+            // 实际文件创建
             mappedFile = this.allocateMappedFileService.putRequestAndReturnMappedFile(nextFilePath,
                     nextNextFilePath, this.mappedFileSize);
         } else {
@@ -237,6 +240,7 @@ public class MappedFileQueue {
             }
         }
 
+        // 将创建好的 mappedFile 提交到 mappedFileQueue 中
         if (mappedFile != null) {
             if (this.mappedFiles.isEmpty()) {
                 mappedFile.setFirstCreateInQueue(true);

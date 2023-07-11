@@ -166,6 +166,7 @@ public class MappedFile extends ReferenceResource {
         this.fileFromOffset = Long.parseLong(this.file.getName());
         boolean ok = false;
 
+        // 确保目录正确，如果没有该目录就创建目录
         ensureDirOK(this.file.getParent());
 
         try {
