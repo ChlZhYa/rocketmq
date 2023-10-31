@@ -260,9 +260,9 @@ public class MQClientInstance {
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
                     this.startScheduledTask();
-                    // Start pull service
+                    // 开启消息拉取服务
                     this.pullMessageService.start();
-                    // Start rebalance service
+                    // 开启重平衡服务
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -610,6 +610,7 @@ public class MQClientInstance {
                     }
                     if (topicRouteData != null) {
                         TopicRouteData old = this.topicRouteTable.get(topic);
+                        // 比较 TopicRouteData 中的 QueueData 和 BrokerData 来判断是否改变
                         boolean changed = topicRouteData.topicRouteDataChanged(old);
                         if (!changed) {
                             changed = this.isNeedUpdateTopicRouteInfo(topic);
@@ -618,7 +619,7 @@ public class MQClientInstance {
                         }
 
                         if (changed) {
-
+                            // 保存 broker 对应的地址列表
                             for (BrokerData bd : topicRouteData.getBrokerDatas()) {
                                 this.brokerAddrTable.put(bd.getBrokerName(), bd.getBrokerAddrs());
                             }
@@ -633,6 +634,7 @@ public class MQClientInstance {
 
                             // Update Pub info
                             {
+                                // 将获取到的数据转化为 Topic 表中的信息，存入本地 Topic 表中
                                 TopicPublishInfo publishInfo = topicRouteData2TopicPublishInfo(topic, topicRouteData);
                                 publishInfo.setHaveTopicRouterInfo(true);
                                 for (Entry<String, MQProducerInner> entry : this.producerTable.entrySet()) {

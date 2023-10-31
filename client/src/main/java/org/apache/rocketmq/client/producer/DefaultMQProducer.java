@@ -131,6 +131,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     /**
      * Interface of asynchronous transfer data
+     * 收集消息轨迹数据
      */
     private TraceDispatcher traceDispatcher = null;
 
@@ -142,12 +143,14 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * on BackpressureForAsyncMode, limit maximum number of on-going sending async messages
      * default is 10000
+     * 用于在异步发送模式下协调生产者发送速率的配置
      */
     private int backPressureForAsyncSendNum = 10000;
 
     /**
      * on BackpressureForAsyncMode, limit maximum message size of on-going sending async messages
      * default is 100M
+     * 用于在异步发送模式下协调生产者发送数据大小的配置
      */
     private int backPressureForAsyncSendSize = 100 * 1024 * 1024;
 
