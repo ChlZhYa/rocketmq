@@ -83,6 +83,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      *
      * See <a href="https://rocketmq.apache.org/docs/introduction/02concepts">core concepts</a> for more discussion.
      */
+    // 生产组
     private String producerGroup;
 
     /**
@@ -92,16 +93,19 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     /**
      * Number of queues to create per default topic.
+     * 默认的队列数量
      */
     private volatile int defaultTopicQueueNums = 4;
 
     /**
      * Timeout for sending messages.
+     * 消息发送超时时间
      */
     private int sendMsgTimeout = 3000;
 
     /**
      * Compress message body threshold, namely, message body larger than 4k will be compressed on default.
+     * 触发消息压缩的阈值
      */
     private int compressMsgBodyOverHowmuch = 1024 * 4;
 
@@ -109,6 +113,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * Maximum number of retry to perform internally before claiming sending failure in synchronous mode. </p>
      *
      * This may potentially cause message duplication which is up to application developers to resolve.
+     * 同步发送消息失败时的重试次数
      */
     private int retryTimesWhenSendFailed = 2;
 
@@ -116,41 +121,45 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * Maximum number of retry to perform internally before claiming sending failure in asynchronous mode. </p>
      *
      * This may potentially cause message duplication which is up to application developers to resolve.
+     * 异步发送消息失败时的重试次数
      */
     private int retryTimesWhenSendAsyncFailed = 2;
 
     /**
      * Indicate whether to retry another broker on sending failure internally.
+     * 发送失败时，尝试使用另外的 Broker，默认为 false
      */
     private boolean retryAnotherBrokerWhenNotStoreOK = false;
 
     /**
      * Maximum allowed message body size in bytes.
+     * 支持发送的最大的消息体，默认为 4M
      */
     private int maxMessageSize = 1024 * 1024 * 4; // 4M
 
     /**
      * Interface of asynchronous transfer data
-     * 收集消息轨迹数据
+     * 消息轨迹跟踪收集器
      */
     private TraceDispatcher traceDispatcher = null;
 
     /**
      * Indicate whether to block message when asynchronous sending traffic is too heavy.
+     * 是否同步发送背压控制机制
      */
     private boolean enableBackpressureForAsyncMode = false;
 
     /**
      * on BackpressureForAsyncMode, limit maximum number of on-going sending async messages
      * default is 10000
-     * 用于在异步发送模式下协调生产者发送速率的配置
+     * 背压参数：生产者发送速率的配置
      */
     private int backPressureForAsyncSendNum = 10000;
 
     /**
      * on BackpressureForAsyncMode, limit maximum message size of on-going sending async messages
      * default is 100M
-     * 用于在异步发送模式下协调生产者发送数据大小的配置
+     * 背压参数：发送数据大小的配置
      */
     private int backPressureForAsyncSendSize = 100 * 1024 * 1024;
 

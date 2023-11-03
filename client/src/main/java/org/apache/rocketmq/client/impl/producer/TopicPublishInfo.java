@@ -73,6 +73,7 @@ public class TopicPublishInfo {
             for (int i = 0; i < this.messageQueueList.size(); i++) {
                 int index = this.sendWhichQueue.incrementAndGet();
                 int pos = index % this.messageQueueList.size();
+                // 避免与上次使用同一个 broker
                 MessageQueue mq = this.messageQueueList.get(pos);
                 if (!mq.getBrokerName().equals(lastBrokerName)) {
                     return mq;
@@ -83,6 +84,7 @@ public class TopicPublishInfo {
     }
 
     public MessageQueue selectOneMessageQueue() {
+        // 轮询
         int index = this.sendWhichQueue.incrementAndGet();
         int pos = index % this.messageQueueList.size();
 

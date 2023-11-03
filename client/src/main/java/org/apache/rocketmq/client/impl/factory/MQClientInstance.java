@@ -625,6 +625,7 @@ public class MQClientInstance {
                             }
 
                             // Update endpoint map
+                            // 将 TopicRouteData 转换为 MessageQueue
                             {
                                 ConcurrentMap<MessageQueue, String> mqEndPoints = topicRouteData2EndpointsForStaticTopic(topic, topicRouteData);
                                 if (!mqEndPoints.isEmpty()) {
