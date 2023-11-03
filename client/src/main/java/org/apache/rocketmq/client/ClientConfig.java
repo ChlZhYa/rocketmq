@@ -48,14 +48,17 @@ public class ClientConfig {
 
     /**
      * Pulling topic information interval from the named server
+     * 客户端从 NameServer 更新 Topic 的间隔，默认为 30s。
      */
     private int pollNameServerInterval = 1000 * 30;
     /**
      * Heartbeat interval in microseconds with message broker
+     * 客户端向 Broker 发送心跳包的时间间隔，默认为 30s
      */
     private int heartbeatBrokerInterval = 1000 * 30;
     /**
      * Offset persistent interval for consumer
+     * 持久化消费进度的时间间隔，默认为 5s
      */
     private int persistConsumerOffsetInterval = 1000 * 5;
     private long pullTimeDelayMillsWhenException = 1000;

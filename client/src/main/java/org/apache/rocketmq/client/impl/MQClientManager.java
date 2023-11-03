@@ -45,12 +45,16 @@ public class MQClientManager {
     }
 
     public MQClientInstance getOrCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
+        // clientId 中拼接了 instanceName，由于 instanceName 使用了 nanoTime，理论上不会重复
         String clientId = clientConfig.buildMQClientId();
+        // 先尝试从缓存中获取
         MQClientInstance instance = this.factoryTable.get(clientId);
         if (null == instance) {
+            // 构建新的客户端实例
             instance =
                 new MQClientInstance(clientConfig.cloneClientConfig(),
                     this.factoryIndexGenerator.getAndIncrement(), clientId, rpcHook);
+            // 通过该方法将实例放入到实例表中
             MQClientInstance prev = this.factoryTable.putIfAbsent(clientId, instance);
             if (prev != null) {
                 instance = prev;

@@ -26,9 +26,11 @@ public class MQFaultStrategy {
     private final static Logger log = LoggerFactory.getLogger(MQFaultStrategy.class);
     private final LatencyFaultTolerance<String> latencyFaultTolerance = new LatencyFaultToleranceImpl();
 
+    // 是否开启失败延迟规避机制。RocketMQ 内部会在重试时避开上一次发送失败的 Broker。如果开启延迟规避机制，则会在一段时间内不再向该 Broker 发送消息。
     private boolean sendLatencyFaultEnable = false;
 
     private long[] latencyMax = {50L, 100L, 550L, 1000L, 2000L, 3000L, 15000L};
+    // 根据每次消息发送的延迟时间来选择在未来多久内不向该 Broker 发送消息。
     private long[] notAvailableDuration = {0L, 0L, 30000L, 60000L, 120000L, 180000L, 600000L};
 
     public long[] getNotAvailableDuration() {

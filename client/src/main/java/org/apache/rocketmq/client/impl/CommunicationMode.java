@@ -18,6 +18,8 @@ package org.apache.rocketmq.client.impl;
 
 public enum CommunicationMode {
     SYNC,
+    // 异步发送消息，Producer 不会等待 Broker 的返回，而是通过回调的方式来处理发送结果
     ASYNC,
+    // 只发送消息，不关心 Broker 的返回，日志收集可以使用该模式
     ONEWAY,
 }

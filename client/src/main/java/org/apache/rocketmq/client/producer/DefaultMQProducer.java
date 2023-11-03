@@ -92,16 +92,20 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     /**
      * Number of queues to create per default topic.
+     * Topic 默认的队列的数量
      */
     private volatile int defaultTopicQueueNums = 4;
 
     /**
      * Timeout for sending messages.
+     * 消息发送的默认超时时间。
+     * 从 4.3 版本开始，该时间是指消息发送总的超时时间，即也包括了重试的时间
      */
     private int sendMsgTimeout = 3000;
 
     /**
      * Compress message body threshold, namely, message body larger than 4k will be compressed on default.
+     * 触发压缩的阈值，当消息体超过 4K 时，会对消息进行压缩
      */
     private int compressMsgBodyOverHowmuch = 1024 * 4;
 
@@ -109,6 +113,8 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * Maximum number of retry to perform internally before claiming sending failure in synchronous mode. </p>
      *
      * This may potentially cause message duplication which is up to application developers to resolve.
+     *
+     * 同步发送消息的重试次数（重试可能会导致消息重复）
      */
     private int retryTimesWhenSendFailed = 2;
 
@@ -116,21 +122,25 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * Maximum number of retry to perform internally before claiming sending failure in asynchronous mode. </p>
      *
      * This may potentially cause message duplication which is up to application developers to resolve.
+     * 异步发送消息的重试次数（重试可能会导致消息重复）
      */
     private int retryTimesWhenSendAsyncFailed = 2;
 
     /**
      * Indicate whether to retry another broker on sending failure internally.
+     * 当客户端收到的 Broker 的响应不是  SEND_OK 时，是否直接切换到另一个 Broker
      */
     private boolean retryAnotherBrokerWhenNotStoreOK = false;
 
     /**
      * Maximum allowed message body size in bytes.
+     * 允许的最大的消息体
      */
     private int maxMessageSize = 1024 * 1024 * 4; // 4M
 
     /**
      * Interface of asynchronous transfer data
+     * 消息轨迹跟踪器
      */
     private TraceDispatcher traceDispatcher = null;
 
@@ -142,6 +152,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * on BackpressureForAsyncMode, limit maximum number of on-going sending async messages
      * default is 10000
+     * 背压机制参数，用来调节生产者发送速率
      */
     private int backPressureForAsyncSendNum = 10000;
 
@@ -295,7 +306,9 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      */
     @Override
     public void start() throws MQClientException {
+        // 设置生产组名称
         this.setProducerGroup(withNamespace(this.producerGroup));
+        // 启动 Producer
         this.defaultMQProducerImpl.start();
         if (null != traceDispatcher) {
             try {

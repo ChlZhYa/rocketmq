@@ -152,14 +152,14 @@ public class MQClientInstance {
         this.clientId = clientId;
 
         this.mQAdminImpl = new MQAdminImpl(this);
-
+        // 消息接收服务
         this.pullMessageService = new PullMessageService(this);
-
+        // 重平衡服务
         this.rebalanceService = new RebalanceService(this);
 
         this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);
         this.defaultMQProducer.resetClientConfig(clientConfig);
-
+        // 消费端采样任务
         this.consumerStatsManager = new ConsumerStatsManager(this.scheduledExecutorService);
 
         log.info("Created a new client Instance, InstanceIndex:{}, ClientID:{}, ClientConfig:{}, ClientVersion:{}, SerializerType:{}",
@@ -252,17 +252,17 @@ public class MQClientInstance {
             switch (this.serviceState) {
                 case CREATE_JUST:
                     this.serviceState = ServiceState.START_FAILED;
-                    // If not specified,looking address from name server
+                    // 如果没有指定 NameServer 地址，提前尝试通过 HTTP 调用拉取 NameServer
                     if (null == this.clientConfig.getNamesrvAddr()) {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
-                    // Start request-response channel
+                    // 构建 Netty 请求服务
                     this.mQClientAPIImpl.start();
-                    // Start various schedule tasks
+                    // 开启 Client 端各种定时任务，同步最新状态
                     this.startScheduledTask();
-                    // Start pull service
+                    // 开启消息拉取服务
                     this.pullMessageService.start();
-                    // Start rebalance service
+                    // 开启重平衡服务
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -278,6 +278,7 @@ public class MQClientInstance {
     }
 
     private void startScheduledTask() {
+        // 每 2 分钟根据 Host 请求 NameServer 获取最新的地址
         if (null == this.clientConfig.getNamesrvAddr()) {
             this.scheduledExecutorService.scheduleAtFixedRate(() -> {
                 try {
@@ -287,7 +288,7 @@ public class MQClientInstance {
                 }
             }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);
         }
-
+        // 每 30 秒定时从 NameServer 更新本地 Topic 信息
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 MQClientInstance.this.updateTopicRouteInfoFromNameServer();
@@ -298,21 +299,24 @@ public class MQClientInstance {
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
+                // 清理下线 Broker
                 MQClientInstance.this.cleanOfflineBroker();
+                // 向所有 Broker 发送心跳
                 MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
             } catch (Exception e) {
                 log.error("ScheduledTask sendHeartbeatToAllBroker exception", e);
             }
         }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);
-
+        // 每 5 秒进行一次本地消费进度的持久化
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
+                // 通过对 ConsumerTable 进行扫描，只有 consumerClient  会执行具体逻辑
                 MQClientInstance.this.persistAllConsumerOffset();
             } catch (Exception e) {
                 log.error("ScheduledTask persistAllConsumerOffset exception", e);
             }
         }, 1000 * 10, this.clientConfig.getPersistConsumerOffsetInterval(), TimeUnit.MILLISECONDS);
-
+        // 每天调整线程池参数
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 MQClientInstance.this.adjustThreadPool();

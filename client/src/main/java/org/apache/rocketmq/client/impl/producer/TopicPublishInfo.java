@@ -26,8 +26,11 @@ import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 public class TopicPublishInfo {
     private boolean orderTopic = false;
     private boolean haveTopicRouterInfo = false;
+    // Topic 中的队列信息
     private List<MessageQueue> messageQueueList = new ArrayList<>();
+    // 用来支持消息发送时选择 Topic 的队列
     private volatile ThreadLocalIndex sendWhichQueue = new ThreadLocalIndex();
+    // Topic 路由数据，包括 QueueData 和 BrokerData
     private TopicRouteData topicRouteData;
 
     public boolean isOrderTopic() {
