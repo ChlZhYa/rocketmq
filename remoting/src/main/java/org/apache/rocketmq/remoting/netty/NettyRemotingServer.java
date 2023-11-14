@@ -112,16 +112,20 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
         final ChannelEventListener channelEventListener) {
         super(nettyServerConfig.getServerOnewaySemaphoreValue(), nettyServerConfig.getServerAsyncSemaphoreValue());
+        // Netty 服务端启动类
         this.serverBootstrap = new ServerBootstrap();
         this.nettyServerConfig = nettyServerConfig;
         this.channelEventListener = channelEventListener;
 
+        // 在 registerProcessor 方法中，会将该线程池与 Processor 绑定，处理某些特定的业务请求，例如异步发送结果回调。默认线程数为 4
         this.publicExecutor = buildPublicExecutor(nettyServerConfig);
         this.scheduledExecutorService = buildScheduleExecutor();
 
+        // Boss 线程组用于处理连接事件
         this.eventLoopGroupBoss = buildBossEventLoopGroup();
+        // Worker EventLoopGroup 默认 3 个线程，用于处理读写请求
         this.eventLoopGroupSelector = buildEventLoopGroupSelector();
-
+        // 加载 SSL 信息
         loadSslContext();
     }
 
@@ -150,6 +154,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     }
 
     private EventLoopGroup buildBossEventLoopGroup() {
+        // 根据是否使用 Epoll 模型来初始化不同的 EventLoopGroup
         if (useEpoll()) {
             return new EpollEventLoopGroup(1, new ThreadFactory() {
                 private final AtomicInteger threadIndex = new AtomicInteger(0);
@@ -218,6 +223,11 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     @Override
     public void start() {
+        /*
+         * 创建默认事件处理器组，线程数默认为 8 个。
+         * 主要用于执行业务处理的前置操作，包括 SSL 验证，编解码，空闲检查，网络连接管理等操作。
+         * 工作时间位于 IO 线程组之后， processor 线程组之前。
+         */
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
             nettyServerConfig.getServerWorkerThreads(),
             new ThreadFactory() {
@@ -229,9 +239,12 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     return new Thread(r, "NettyServerCodecThread_" + this.threadIndex.incrementAndGet());
                 }
             });
-
+        /*
+         * 准备一些共享handler
+         * 包括handshakeHandler、encoder、connectionManageHandler、serverHandler
+         */
         prepareSharableHandlers();
-
+        // 配置 NettyServer 的启动参数
         serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
             .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -243,6 +256,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             .childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) {
+                    // 配置 handler
                     configChannel(ch);
                 }
             });
@@ -250,6 +264,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         addCustomConfig(serverBootstrap);
 
         try {
+            // 启动 Netty 服务
             ChannelFuture sync = serverBootstrap.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
             if (0 == nettyServerConfig.getListenPort()) {
@@ -266,7 +281,10 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         if (this.channelEventListener != null) {
             this.nettyEventExecutor.start();
         }
-
+        /*
+         * 启动3秒后执行，每隔1秒执行一次。扫描 responseTable，将超时的 ResponseFuture 直接移除，并且执行回调
+         * ResponseFuture 是 RocketMQ 中请求结果的封装类
+         */
         this.timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override

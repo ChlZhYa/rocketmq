@@ -797,7 +797,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 if (Boolean.parseBoolean(tranMsg)) {
                     sysFlag |= MessageSysFlag.TRANSACTION_PREPARED_TYPE;
                 }
-
+                // 消息上下文
                 if (hasCheckForbiddenHook()) {
                     CheckForbiddenContext checkForbiddenContext = new CheckForbiddenContext();
                     checkForbiddenContext.setNameSrvAddr(this.defaultMQProducer.getNamesrvAddr());
@@ -830,7 +830,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                     }
                     this.executeSendMessageHookBefore(context);
                 }
-
+                // 构建消息头
                 SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
                 requestHeader.setProducerGroup(this.defaultMQProducer.getProducerGroup());
                 requestHeader.setTopic(msg.getTopic());
@@ -1164,6 +1164,12 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         return this.sendSelectImpl(msg, selector, arg, CommunicationMode.SYNC, null, timeout);
     }
 
+    /**
+     * 与 sendDefaultImpl 的区别是
+     * 该方法可以使用传入的 队列选择器将消息发送到指定的的 MessageQueue
+     * 类似于 Kafka 中的 Partitioner 分区器
+
+     */
     private SendResult sendSelectImpl(
         Message msg,
         MessageQueueSelector selector,

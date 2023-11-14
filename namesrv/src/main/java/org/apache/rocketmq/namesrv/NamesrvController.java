@@ -101,11 +101,33 @@ public class NamesrvController {
     }
 
     public boolean initialize() {
+        /*
+         * 加载KV配置并存储到kvConfigManager内部的configTable属性中
+         * KVConfig配置文件默认路径是 ${user.home}/namesrv/kvConfig.json
+         */
         loadConfig();
+        /*
+         * 创建NameServer的netty远程服务
+         * 设置了一个ChannelEventListener
+         */
         initiateNetworkComponents();
+        /*
+         * 创建netty远程通信执行器线程池，用作默认的请求处理线程池，线程名以RemotingExecutorThread_为前缀
+         */
         initiateThreadExecutors();
+        /*
+         * 注册默认请求处理器DefaultRequestProcessor
+         * DefaultRequestProcessor绑定到remotingServer的defaultRequestProcessor属性上，用作默认的请求处理线程池
+         */
         registerProcessor();
+        /*
+         * 启动一个定时任务
+         * 首次启动延迟5秒执行，此后每隔10秒执行一次扫描无效的Broker，并清除Broker相关路由信息的任务
+         */
         startScheduleService();
+        /*
+         * Tls传输相关配置，通信安全的文件监听模块，用来观察网络加密配置文件的更改
+         */
         initiateSslContext();
         initiateRpcHooks();
         return true;
@@ -116,6 +138,7 @@ public class NamesrvController {
     }
 
     private void startScheduleService() {
+        // 移除不活跃的 Broker
         this.scanExecutorService.scheduleAtFixedRate(NamesrvController.this.routeInfoManager::scanNotActiveBroker,
             5, this.namesrvConfig.getScanNotActiveBrokerInterval(), TimeUnit.MILLISECONDS);
 
@@ -132,6 +155,7 @@ public class NamesrvController {
     }
 
     private void initiateNetworkComponents() {
+        // remotingServer是一个基于Netty的用于NameServer与Broker、Consumer、Producer进行网络通信的服务端
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
         this.remotingClient = new NettyRemotingClient(this.nettyClientConfig);
     }
@@ -219,6 +243,14 @@ public class NamesrvController {
             this.remotingServer.registerDefaultProcessor(new ClusterTestRequestProcessor(this, namesrvConfig.getProductEnvName()), this.defaultExecutor);
         } else {
             // Support get route info only temporarily
+            /*
+             * 将remotingExecutor绑定到DefaultRequestProcessor上，
+             * 存储在 NettyRemotingAbstract.defaultRequestProcessorPair中，用作默认的请求处理线程池
+             * 当有请求到 NameServer 时，会根据请求中的业务 Code，获取对应 的RequestProcessor 进行处理。
+             * 如果请求的业务 Code 没有注册对应的 RequestProcessor，则采用 DefaultRequestProcessor
+             * 这段逻辑可以看 NettyRemotingAbstract#processRequestCommand
+             */
+            //将DefaultRequestProcessor绑定到remotingServer的defaultRequestProcessor属性上
             ClientRequestProcessor clientRequestProcessor = new ClientRequestProcessor(this);
             this.remotingServer.registerProcessor(RequestCode.GET_ROUTEINFO_BY_TOPIC, clientRequestProcessor, this.clientRequestExecutor);
 
@@ -231,6 +263,7 @@ public class NamesrvController {
     }
 
     public void start() throws Exception {
+        // 启动网络通信模块
         this.remotingServer.start();
 
         // In test scenarios where it is up to OS to pick up an available port, set the listening port back to config

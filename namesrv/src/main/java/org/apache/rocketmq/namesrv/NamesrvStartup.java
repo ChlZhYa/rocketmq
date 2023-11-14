@@ -57,7 +57,9 @@ public class NamesrvStartup {
 
     public static NamesrvController main0(String[] args) {
         try {
+            // 解析命令行参数与配置文件
             parseCommandlineAndConfigFile(args);
+            // 创建 NamesrvController
             NamesrvController controller = createAndStartNamesrvController();
             return controller;
         } catch (Throwable e) {
@@ -135,9 +137,11 @@ public class NamesrvStartup {
     }
 
     public static NamesrvController createAndStartNamesrvController() throws Exception {
-
+        // 创建 NamesrvController 类
         NamesrvController controller = createNamesrvController();
+        // 启动 NamesrvController
         start(controller);
+        // Netty 服务器通信配置
         NettyServerConfig serverConfig = controller.getNettyServerConfig();
         String tip = String.format("The Name Server boot success. serializeType=%s, address %s:%d", RemotingCommand.getSerializeTypeConfigInThisServer(), serverConfig.getBindAddress(), serverConfig.getListenPort());
         log.info(tip);
@@ -158,12 +162,19 @@ public class NamesrvStartup {
         if (null == controller) {
             throw new IllegalArgumentException("NamesrvController is null");
         }
-
+        /*
+         * 初始化 NameServerController
+         * 创建 Netty 远程服务
+         * 初始化 Netty 线程池
+         * 注册请求处理器
+         * 开启定时任务（用于移除不活跃的 Broker）
+         */
         boolean initResult = controller.initialize();
         if (!initResult) {
             controller.shutdown();
             System.exit(-3);
         }
+        //JVM HOOK，在 JVM 退出时先关闭 NamesrvController
 
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, (Callable<Void>) () -> {
             controller.shutdown();

@@ -256,7 +256,7 @@ public class MQClientInstance {
                     if (null == this.clientConfig.getNamesrvAddr()) {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
-                    // 构建 Netty 请求服务
+                    // 启动请求响应通道
                     this.mQClientAPIImpl.start();
                     // 开启 Client 端各种定时任务，同步最新状态
                     this.startScheduledTask();

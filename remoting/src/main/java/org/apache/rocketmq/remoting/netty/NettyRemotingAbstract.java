@@ -244,6 +244,7 @@ public abstract class NettyRemotingAbstract {
      * @param cmd request command.
      */
     public void processRequestCommand(final ChannelHandlerContext ctx, final RemotingCommand cmd) {
+        // 先从 processorTable 中获取 CODE 对应的 Processor，如果没有匹配到则使用 defaultRequestProcessor
         final Pair<NettyRequestProcessor, ExecutorService> matched = this.processorTable.get(cmd.getCode());
         final Pair<NettyRequestProcessor, ExecutorService> pair = null == matched ? this.defaultRequestProcessorPair : matched;
         final int opaque = cmd.getOpaque();

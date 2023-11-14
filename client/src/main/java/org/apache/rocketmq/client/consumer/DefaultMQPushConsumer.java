@@ -141,6 +141,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
 
     /**
      * Subscription relationship
+     * 订阅关系
      */
     private Map<String /* topic */, String /* sub expression */> subscription = new HashMap<>();
 
@@ -735,6 +736,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     public void start() throws MQClientException {
         setConsumerGroup(NamespaceUtil.wrapNamespace(this.getNamespace(), this.consumerGroup));
         this.defaultMQPushConsumerImpl.start();
+        // 轨迹跟踪器
         if (null != traceDispatcher) {
             try {
                 traceDispatcher.start(this.getNamesrvAddr(), this.getAccessChannel());
